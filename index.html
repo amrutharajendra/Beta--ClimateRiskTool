@@ -1,0 +1,1709 @@
+<meta charset="utf-8">
+<title>Climate Risk TARP Finder</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+  /* Layout: questionnaire rail on the left (sticky on wide screens), results register on the right; stacks on phones. */
+  :root {
+    --bg: #f3f5f7;
+    --surface: #ffffff;
+    --sunk: #e9edf1;
+    --line: #d3dae1;
+    --fg: #17212b;
+    --muted: #566573;
+    --accent: #0b5d7a;
+    --accent-ink: #ffffff;
+    --accent-soft: #dcecf2;
+    --n: black;
+    --n-bg: #5abc7b;
+    --t1: black;
+    --t1-bg: #f2d323;
+    --t2: black;
+    --t2-bg: #f08a1c;
+    --t3: black;
+    --t3-bg: #f75344;
+    --lv-ext: #b3261e;
+    --lv-high: #c2570c;
+    --lv-med: #8a6d00;
+    --lv-low: #2f7d4f;
+    --f-display: "Barlow Semi Condensed", "Arial Narrow", Arial, sans-serif;
+    --f-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    --f-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11171d;
+      --surface: #18212a;
+      --sunk: #202b35;
+      --line: #2f3c48;
+      --fg: #e6ecf1;
+      --muted: #9aa9b6;
+      --accent: #5fb7d6;
+      --accent-ink: #0b1a22;
+      --accent-soft: #183746;
+      --n: #7fd19c;
+      --n-bg: #17321f;
+      --t1: black;
+      --t1-bg: black;
+      --t1-bar: #d9b800;
+      --t2: #ffb36b;
+      --t2-bg: #40260f;
+      --t2-bar: #f08a1c;
+      --t3: #ff8f86;
+      --t3-bg: #45191a;
+      --t3-bar: #e5483d;
+      --lv-ext: #ff8f86;
+      --lv-high: #ffa45c;
+      --lv-med: #f0d55c;
+      --lv-low: #7fd19c;
+      color-scheme: dark
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #11171d;
+    --surface: #18212a;
+    --sunk: #202b35;
+    --line: #2f3c48;
+    --fg: #e6ecf1;
+    --muted: #9aa9b6;
+    --accent: #5fb7d6;
+    --accent-ink: #0b1a22;
+    --accent-soft: #183746;
+    --n: #7fd19c;
+    --n-bg: #17321f;
+    --t1: #f0d55c;
+    --t1-bg: #3a3110;
+    --t1-bar: #d9b800;
+    --t2: #ffb36b;
+    --t2-bg: #40260f;
+    --t2-bar: #f08a1c;
+    --t3: #ff8f86;
+    --t3-bg: #45191a;
+    --t3-bar: #e5483d;
+    --lv-ext: #ff8f86;
+    --lv-high: #ffa45c;
+    --lv-med: #f0d55c;
+    --lv-low: #7fd19c;
+    color-scheme: dark
+  }
+
+  * {
+    box-sizing: border-box
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--f-body);
+    font-size: 15px;
+    line-height: 1.5
+  }
+
+  .wrap {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 20px 48px
+  }
+
+  header.top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 16px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--fg);
+    margin-bottom: 20px
+  }
+
+  header.top h1 {
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: 1.9rem;
+    letter-spacing: .01em;
+    margin: 0;
+    text-wrap: balance
+  }
+
+  header.top p {
+    margin: 0;
+    color: var(--muted)
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+    gap: 24px;
+    align-items: start
+  }
+
+  @media (max-width:900px) {
+    .layout {
+      grid-template-columns: minmax(0, 1fr)
+    }
+  }
+
+  /* questionnaire */
+  form.q {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px
+  }
+
+  @media (min-width:901px) {
+    form.q {
+      position: sticky;
+      top: calc(env(safe-area-inset-top, 0px) + 12px);
+      max-height: calc(100vh - 24px);
+      overflow: auto
+    }
+  }
+
+  fieldset {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0
+  }
+
+  legend {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: .82rem;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    color: var(--accent);
+    padding: 0;
+    margin-bottom: 6px
+  }
+
+  label.f {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-weight: 600;
+    font-size: .92rem
+  }
+
+  input[type=text],
+  select {
+    font: inherit;
+    font-weight: 400;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--fg);
+    width: 100%
+  }
+
+  input[type=text]:focus-visible,
+  select:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px
+  }
+
+  .yn {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    border-top: 1px solid var(--sunk)
+  }
+
+  .yn:first-of-type {
+    border-top: 0
+  }
+
+  .yn span.qt {
+    font-size: .92rem;
+    line-height: 1.35
+  }
+
+  .seg {
+    display: inline-flex;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden
+  }
+
+  .seg input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px
+  }
+
+  .seg label {
+    padding: 4px 12px;
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--muted);
+    background: var(--bg)
+  }
+
+  .seg label+input+label {
+    border-left: 1px solid var(--line)
+  }
+
+  .seg input:checked+label {
+    background: var(--accent);
+    color: var(--accent-ink)
+  }
+
+  .seg input:focus-visible+label {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px
+  }
+
+  .row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px
+  }
+
+  button {
+    font: inherit;
+    font-weight: 600;
+    font-size: .88rem;
+    padding: 7px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--fg);
+    cursor: pointer
+  }
+
+  button:hover {
+    border-color: var(--accent)
+  }
+
+  button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px
+  }
+
+  button.primary {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-color: var(--accent)
+  }
+
+  /* results */
+  .summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 18px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-bottom: 16px
+  }
+
+  .summary h2 {
+    font-family: var(--f-display);
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0;
+    flex: 1 1 260px;
+    min-width: 0;
+    text-wrap: balance
+  }
+
+  .summary .sub {
+    display: block;
+    font-family: var(--f-body);
+    font-size: .9rem;
+    font-weight: 400;
+    color: var(--muted)
+  }
+
+  .counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: .8rem;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    padding: 2px 9px;
+    border-radius: 999px;
+    border: 1.5px solid currentColor;
+    white-space: nowrap
+  }
+
+  .lv-Extreme {
+    color: var(--lv-ext)
+  }
+
+  .lv-High {
+    color: var(--lv-high)
+  }
+
+  .lv-Medium {
+    color: var(--lv-med)
+  }
+
+  .lv-Low {
+    color: var(--lv-low)
+  }
+
+  .toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .9rem;
+    color: var(--muted)
+  }
+
+  .toggle input {
+    accent-color: var(--accent);
+    width: 16px;
+    height: 16px
+  }
+
+  .cards {
+    display: flex;
+    flex-direction: column;
+    gap: 18px
+  }
+
+  article.risk {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden
+  }
+
+  .rh {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line)
+  }
+
+  .rid {
+    font-family: var(--f-mono);
+    font-size: .8rem;
+    color: var(--muted);
+    background: var(--sunk);
+    padding: 2px 6px;
+    border-radius: 3px
+  }
+
+  .rh h3 {
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: 1.3rem;
+    margin: 0;
+    flex: 1 1 220px;
+    min-width: 0
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    padding: 10px 16px;
+    background: var(--sunk);
+    font-size: .88rem
+  }
+
+  .meta b {
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-size: .72rem;
+    letter-spacing: .08em;
+    margin-right: 4px
+  }
+
+  .chip {
+    display: inline-block;
+    font-size: .8rem;
+    padding: 1px 7px;
+    border-radius: 3px;
+    background: var(--accent-soft);
+    color: var(--fg);
+    margin: 1px 3px 1px 0
+  }
+
+  .chip.poss {
+    background: transparent;
+    border: 1px dashed var(--muted);
+    color: var(--muted)
+  }
+
+  .two {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0
+  }
+
+  .two>section {
+    padding: 14px 16px;
+    min-width: 0
+  }
+
+  .two>section+section {
+    border-left: 1px solid var(--line)
+  }
+
+  @media (max-width:700px) {
+    .two {
+      grid-template-columns: minmax(0, 1fr)
+    }
+
+    .two>section+section {
+      border-left: 0;
+      border-top: 1px solid var(--line)
+    }
+  }
+
+  h4 {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: .82rem;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    color: var(--muted);
+    margin: 0 0 6px
+  }
+
+  .txt {
+    white-space: pre-line;
+    font-size: .92rem;
+    overflow-wrap: anywhere
+  }
+
+  .txt a {
+    color: var(--accent)
+  }
+
+  .txt strong {
+    display: inline-block;
+    margin-top: 4px
+  }
+
+  .tarp-wrap {
+    border-top: 1px solid var(--line);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px
+  }
+
+  .tarp {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px
+  }
+
+  @media (max-width:1100px) {
+    .tarp {
+      grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+  }
+
+  @media (max-width:560px) {
+    .tarp {
+      grid-template-columns: minmax(0, 1fr)
+    }
+  }
+
+  .lvl {
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-width: 0
+  }
+
+  .lvl .lh {
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: .95rem;
+    letter-spacing: .04em;
+    padding: 6px 10px;
+    border-bottom: 3px solid
+  }
+
+  .lvl.n .lh {
+    background: var(--n-bg);
+    color: var(--n);
+    border-color: var(--n)
+  }
+
+  .lvl.t1 .lh {
+    background: var(--t1-bg);
+    color: var(--t1);
+    border-color: var(--t1-bar)
+  }
+
+  .lvl.t2 .lh {
+    background: var(--t2-bg);
+    color: var(--t2);
+    border-color: var(--t2-bar)
+  }
+
+  .lvl.t3 .lh {
+    background: var(--t3-bg);
+    color: var(--t3);
+    border-color: var(--t3-bar)
+  }
+
+  .lvl .th {
+    padding: 8px 10px;
+    font-weight: 600;
+    font-size: .9rem;
+    border-bottom: 1px dashed var(--line)
+  }
+
+  .lvl .ac {
+    padding: 8px 10px;
+    font-size: .88rem
+  }
+
+  .empty-note {
+    color: var(--muted);
+    font-style: italic;
+    font-size: .88rem
+  }
+
+  details.base {
+    font-size: .86rem;
+    color: var(--muted)
+  }
+
+  details.base summary {
+    cursor: pointer;
+    font-weight: 600
+  }
+
+  .state-msg {
+    background: var(--surface);
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 28px 20px;
+    text-align: left;
+    color: var(--muted)
+  }
+
+  .state-msg strong {
+    display: block;
+    color: var(--fg);
+    font-family: var(--f-display);
+    font-size: 1.15rem;
+    margin-bottom: 4px
+  }
+
+  .toast {
+    font-size: .85rem;
+    color: var(--n)
+  }
+
+  @media (prefers-reduced-motion:no-preference) {
+    article.risk {
+      animation: in .25s ease-out both
+    }
+
+    @keyframes in {
+      from {
+        transform: translateY(4px)
+      }
+
+      to {
+        transform: none
+      }
+    }
+  }
+
+  /* Import Tabs & Drop card */
+  .import-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--line);
+    margin: -4px -4px 4px -4px;
+    gap: 4px;
+  }
+
+  .tab-btn {
+    flex: 1;
+    background: transparent;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    padding: 8px 6px;
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color .15s, border-color .15s;
+  }
+
+  .tab-btn:hover {
+    color: var(--fg);
+    border-color: transparent;
+  }
+
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .tab-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  .tab-pane {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .tab-pane[hidden] {
+    display: none !important;
+  }
+
+  /* Google Sheet Pane */
+  .gsheet-box {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .gsheet-input-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .gsheet-input-wrap label {
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--fg);
+  }
+
+  .gsheet-input-wrap input {
+    font-size: .85rem;
+    padding: 8px 10px;
+  }
+
+  .gsheet-help {
+    font-size: .78rem;
+    color: var(--muted);
+    background: var(--sunk);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 8px 10px;
+    line-height: 1.45;
+  }
+
+  .gsheet-help strong {
+    display: block;
+    color: var(--fg);
+    margin-bottom: 4px;
+  }
+
+  .gsheet-help ol {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  .gsheet-help li {
+    margin: 3px 0;
+  }
+
+  .gsheet-help code {
+    font-family: var(--f-mono);
+    font-size: .75rem;
+    background: var(--surface);
+    padding: 1px 4px;
+    border-radius: 3px;
+    border: 1px solid var(--line);
+  }
+
+  .drop-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px
+  }
+
+  .dropzone {
+    border: 2px dashed var(--accent);
+    border-radius: 6px;
+    background: var(--accent-soft);
+    padding: 14px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .15s, background-color .15s, transform .1s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    position: relative
+  }
+
+  .dropzone:hover,
+  .dropzone:focus-visible {
+    background: var(--sunk);
+    border-color: var(--accent);
+    outline: none
+  }
+
+  .dropzone.drag-active {
+    background: var(--sunk);
+    border-color: var(--lv-low);
+    transform: scale(1.01)
+  }
+
+  .drop-icon {
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center
+  }
+
+  .drop-text strong {
+    display: block;
+    font-size: .88rem;
+    color: var(--fg)
+  }
+
+  .drop-text span {
+    display: block;
+    font-size: .76rem;
+    color: var(--muted);
+    margin-top: 2px
+  }
+
+  .dropzone input[type=file] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%
+  }
+
+  .src-status {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: .82rem
+  }
+
+  .status-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px
+  }
+
+  .sheet-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: .75rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--muted)
+  }
+
+  .sheet-chip.loaded {
+    border-color: #5abc7b;
+    background: rgba(90, 188, 123, .12);
+    color: var(--fg);
+    font-weight: 600
+  }
+
+  .sheet-chip .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    display: inline-block
+  }
+
+  .sheet-chip.loaded .dot {
+    background: #2f7d4f
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .sheet-chip.loaded .dot {
+      background: #7fd19c
+    }
+  }
+
+  .src-meta {
+    font-size: .78rem;
+    color: var(--muted);
+    overflow-wrap: anywhere;
+    line-height: 1.4
+  }
+
+  .sheet-chip.staged {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--fg);
+    font-weight: 600
+  }
+
+  .parse-actions {
+    display: flex;
+    gap: 8px
+  }
+
+  .parse-actions .primary {
+    flex: 1
+  }
+
+  button:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+    border-color: var(--line)
+  }
+
+  .warn {
+    font-size: .85rem;
+    color: var(--t3);
+    background: var(--t3-bg);
+    padding: 8px 10px;
+    border-radius: 4px
+  }
+
+  .warn ul {
+    margin: 4px 0 0;
+    padding-left: 18px
+  }
+
+  #qbody,
+  #groups {
+    display: flex;
+    flex-direction: column;
+    gap: 18px
+  }
+
+  /* Fullscreen drag overlay */
+  .drag-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 32, .78);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .15s ease
+  }
+
+  .drag-overlay.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: all
+  }
+
+  .drag-box {
+    background: var(--surface);
+    border: 2px dashed var(--accent);
+    border-radius: 12px;
+    padding: 36px 44px;
+    text-align: center;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, .3);
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    pointer-events: none
+  }
+
+  .drag-box svg {
+    color: var(--accent)
+  }
+
+  .drag-box h2 {
+    font-family: var(--f-display);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--fg)
+  }
+
+  .drag-box p {
+    margin: 0;
+    font-size: .9rem;
+    color: var(--muted)
+  }
+</style>
+<div class="wrap">
+  <header class="top">
+    <h1>Climate Risk TARP Finder</h1>
+    <p>Answer the project questionnaire to get the climate hazards, risks, trigger levels and TARP that apply to your
+      site.</p>
+  </header>
+  <div class="layout">
+    <form class="q" id="q" novalidate>
+      <div class="drop-card" id="dropcard">
+        <div class="import-tabs" role="tablist">
+          <button type="button" class="tab-btn active" id="tab-file" role="tab" aria-selected="true">📁 CSV / Excel Files</button>
+          <button type="button" class="tab-btn" id="tab-gsheet" role="tab" aria-selected="false">🌐 Google Sheet</button>
+        </div>
+
+        <div class="tab-pane" id="pane-file">
+          <div class="dropzone" id="dropzone" tabindex="0" role="button"
+            aria-label="Drop CSV files or Excel workbook here, or click to browse files">
+            <div class="drop-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+            </div>
+            <div class="drop-text">
+              <strong>Drop CSV or Excel files</strong>
+              <span>or click to browse (.csv, .xlsx)</span>
+            </div>
+            <input type="file" id="fileinput" multiple
+              accept=".csv,.xlsx,.xls,.tsv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+          </div>
+        </div>
+
+        <div class="tab-pane" id="pane-gsheet" hidden>
+          <div class="gsheet-box">
+            <div class="gsheet-input-wrap">
+              <label for="gsheet-url">Google Sheet URL or ID</label>
+              <input type="url" id="gsheet-url" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off">
+            </div>
+            <button type="button" id="gsheet-fetch-btn" class="primary">Fetch Google Sheet</button>
+            <div class="gsheet-help">
+              <strong>How to connect:</strong>
+              <ol>
+                <li>Sheet must contain 3 tabs: <code>Database</code>, <code>TARP &amp; ERP</code>, and <code>Project Questionaire</code>.</li>
+                <li>In Google Sheets, click <b>Share</b> and set General access to <b>"Anyone with the link can view"</b>.</li>
+                <li>Paste the URL above and click <b>Fetch Google Sheet</b>.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <div class="src-status" id="srcstatus">
+          <div class="status-chips" id="statuschips"></div>
+          <div class="src-meta" id="srcmeta">No files added yet.</div>
+        </div>
+        <div class="parse-actions">
+          <button type="button" id="parsebtn" class="primary" disabled>Parse data</button>
+          <button type="button" id="clearbtn" disabled>Clear</button>
+        </div>
+      </div>
+      <div id="warn" hidden></div>
+      <div id="qbody" hidden>
+        <fieldset>
+          <legend>Project information</legend>
+          <label class="f" for="pname">Project name<input type="text" id="pname"></label>
+          <label class="f" for="state">Project location (state/territory)<select id="state"></select></label>
+          <label class="f" for="season">Season when project is conducted<select id="season"></select></label>
+        </fieldset>
+        <div id="groups"></div>
+        <div class="row-actions">
+          <button type="button" id="allno">Set all to No</button>
+          <button type="button" id="fromsheet">Use answers from the workbook</button>
+        </div>
+      </div>
+    </form>
+    <main id="out" aria-live="polite"></main>
+  </div>
+  <div class="drag-overlay" id="dragoverlay" aria-hidden="true">
+    <div class="drag-box">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <polyline points="17 8 12 3 7 8" />
+        <line x1="12" y1="3" x2="12" y2="15" />
+      </svg>
+      <h2>Drop your CSV or Excel files here</h2>
+      <p>Database.csv, TARP_ERP.csv, Project_Questionaire.csv or an .xlsx workbook</p>
+    </div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+  /* No data is bundled with the page: the three sheets (Database, TARP & ERP, Project Questionaire)
+     are supplied by dropping CSV files or an .xlsx workbook, then clicking "Parse data". */
+  const SEASONS_DEFAULT = ["Spring", "Summer", "Autumn", "Winter"];
+  const STATES_DEFAULT = ["New South Wales", "Northern Territory", "Queensland", "South Australia", "Tasmania", "Victoria", "Western Australia"];
+  const $ = s => document.querySelector(s);
+  const norm = s => String(s ?? "").trim().toLowerCase();
+  const str = v => v == null ? "" : String(v).trim();
+  function esc(s) { return String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])) }
+  function rich(s) {
+    if (!s) return "";
+    let h = esc(s.trim()).replace(/(https?:\/\/[^\s<]+)/g, u => { const t = u.replace(/[).,;]+$/, ""); return `<a href="${t}" target="_blank" rel="noopener">${t}</a>` + u.slice(t.length) });
+    return h.replace(/^(Monitor|Mitigation|Communication|Action|Response):?\s*$/gm, "<strong>$1:</strong>").replace(/^(Bushfire-prone:[^\n]*|Work at height[^\n]*|Flood-prone:[^\n]*):$/gm, "<strong>$1</strong>")
+  }
+  function hkey(h) {
+    h = norm(h);
+    if (h.includes("temp")) return "temp"; if (h.includes("coastal")) return "coastal"; if (h.includes("wind")) return "wind";
+    if (h.includes("bushfire")) return "bushfire"; if (h.includes("riverine")) return "river"; if (h.includes("rain")) return "rain"; return h
+  }
+
+  /* ---------- Reading the workbook ---------- */
+  function findSheet(wb, test) {
+    const n = wb.SheetNames.find(n => test(norm(n))); if (!n) return null;
+    const ws = wb.Sheets[n]; if (!ws["!ref"]) return []; const rg = XLSX.utils.decode_range(ws["!ref"]); rg.s = { r: 0, c: 0 };
+    return XLSX.utils.sheet_to_json(ws, { header: 1, defval: "", raw: false, range: rg, blankrows: true })
+  }
+  function col(row, name) { return row.findIndex(c => norm(c) === norm(name)) }
+  function parseWorkbook(wb) {
+    const problems = [];
+    const dbRows = findSheet(wb, n => n === "database");
+    const tpRows = findSheet(wb, n => n.includes("tarp"));
+    const pqRows = findSheet(wb, n => n.includes("questionn") || n.includes("questionaire"));
+    if (!dbRows) throw new Error('No sheet named "Database" was found in this workbook.');
+    if (!pqRows) throw new Error('No "Project Questionaire" sheet was found in this workbook.');
+    if (!tpRows) problems.push('No "TARP & ERP" sheet was found, so trigger levels and TARP will be empty.');
+
+    /* Database: headers in row 1, question columns named in row 2 */
+    let hr = dbRows.findIndex(r => r.some(c => norm(c) === "risk id")); if (hr < 0) hr = 0;
+    const h1 = dbRows[hr] || [], h2 = dbRows[hr + 1] || [];
+    const C = {
+      id: col(h1, "Risk ID"), state: col(h1, "State"), season: col(h1, "Season"), hazard: col(h1, "Climate Hazards"),
+      level: col(h1, "Risk Level"), exposure: col(h1, "Exposure"), vuln: col(h1, "Vulnerability"), risk: col(h1, "Construction Risk Event")
+    };
+    Object.entries(C).forEach(([k, i]) => { if (i < 0) problems.push(`Database column for "${k}" was not found in row 1.`) });
+    let qStart = col(h1, "Question and Response");
+    if (qStart < 0) qStart = h2.findIndex(c => norm(c) === "coastal");
+    let qEnd = h1.findIndex(c => norm(c) === "climate hazard details"); if (qEnd < 0) qEnd = h2.length;
+    const flagCols = []; if (qStart >= 0) for (let i = qStart; i < qEnd; i++) { if (str(h2[i])) flagCols.push({ i, name: str(h2[i]) }) }
+    const db = [];
+    for (let r = hr + 2; r < dbRows.length; r++) {
+      const row = dbRows[r]; const g = i => i < 0 ? "" : str(row[i]);
+      if (!g(C.id) && !g(C.hazard)) continue;
+      db.push({
+        row: r + 1, id: g(C.id), state: g(C.state), season: g(C.season), hazard: g(C.hazard), level: g(C.level),
+        exposure: g(C.exposure), vuln: g(C.vuln), risk: g(C.risk), flags: flagCols.map(f => norm(row[f.i]))
+      })
+    }
+
+    /* TARP & ERP: headers in row 1 */
+    const tarp = [];
+    if (tpRows) {
+      let th = tpRows.findIndex(r => r.some(c => norm(c) === "state")); if (th < 0) th = 0; const t1 = tpRows[th] || [];
+      const T = {
+        state: col(t1, "State"), hazard: t1.findIndex(c => norm(c).includes("hazard")),
+        th: ["Normal Trigger Threshold", "Trigger Threshold 1 (T1)", "Trigger Threshold 2 (T2)", "Trigger Threshold 3 (T3)"].map(n => col(t1, n)),
+        act: ["Normal Action Plan", "T1 TARP", "T2 TARP", "T3 TARP"].map(n => col(t1, n)), base: col(t1, "Base Information")
+      };
+      if (T.state < 0 || T.hazard < 0) problems.push('TARP & ERP sheet: "State" or hazard column not found in row 1.');
+      for (let r = th + 1; r < tpRows.length; r++) {
+        const row = tpRows[r]; const g = i => i < 0 ? "" : str(row[i]);
+        if (!g(T.state) || !g(T.hazard)) continue;
+        tarp.push({ state: g(T.state), hazard: g(T.hazard), th: T.th.map(g), act: T.act.map(g), base: g(T.base) })
+      }
+    }
+
+    /* Project Questionaire: labels in column B, answers in column E */
+    const info = {}, groups = []; let cur = null;
+    pqRows.forEach(row => {
+      /* Works whether or not Excel kept the empty column A / row 1 when saving the CSV */
+      const cells = row.map(str); const li = cells.findIndex(c => c && c !== ":"); if (li < 0) return;
+      const lab = cells[li]; const rest = cells.slice(li + 1).filter(c => c && c !== ":"); const ans = rest.length ? rest[rest.length - 1] : "";
+      const l = norm(lab);
+      if (l.startsWith("project name")) info.pname = ans;
+      else if (l.includes("location")) info.state = ans;
+      else if (l.startsWith("season")) info.season = ans;
+      else if (l === "project information") return;
+      else if (!lab.endsWith("?")) { cur = { title: lab, qs: [] }; groups.push(cur) }
+      else { if (!cur) { cur = { title: "Questions", qs: [] }; groups.push(cur) } cur.qs.push({ text: lab, answer: norm(ans) === "yes" ? "Yes" : "No" }) }
+    });
+    const allQs = groups.flatMap(g => g.qs);
+    if (allQs.length !== flagCols.length) problems.push(`The questionnaire has ${allQs.length} Yes/No questions but the Database has ${flagCols.length} question columns. They are paired in order, so check both sheets list them in the same order.`);
+    allQs.forEach((q, i) => { q.idx = i; q.flag = flagCols[i] ? flagCols[i].name : "(no Database column)" });
+
+    const states = [...new Set([...STATES_DEFAULT, ...db.map(r => r.state)].map(s => s.trim()).filter(Boolean))].sort();
+    return { db, tarp, groups, info, states, problems };
+  }
+
+  /* ---------- State ---------- */
+  let M = null, src = null, includePossible = true, last = [];
+  try { const v = localStorage.getItem("ctf-poss"); if (v !== null) includePossible = v === "1" } catch (e) { }
+
+  function buildForm() {
+    $("#state").innerHTML = M.states.map(s => `<option>${esc(s)}</option>`).join("");
+    $("#season").innerHTML = SEASONS_DEFAULT.map(s => `<option>${s}</option>`).join("");
+    $("#groups").innerHTML = M.groups.map(g => `<fieldset><legend>${esc(g.title)}</legend>${g.qs.map(q => `<div class="yn"><span class="qt" id="l-${q.idx}">${esc(q.text)}</span><span class="seg" role="radiogroup" aria-labelledby="l-${q.idx}">
+  <input type="radio" name="q${q.idx}" id="q${q.idx}-y" value="Yes"><label for="q${q.idx}-y">Yes</label>
+  <input type="radio" name="q${q.idx}" id="q${q.idx}-n" value="No" checked><label for="q${q.idx}-n">No</label></span></div>`).join("")}</fieldset>`).join("");
+    $("#qbody").hidden = false;
+  }
+  function allQs() { return M.groups.flatMap(g => g.qs) }
+  function applySheetAnswers() {
+    const i = M.info; $("#pname").value = i.pname || "";
+    if (i.state && M.states.includes(i.state)) $("#state").value = i.state;
+    if (i.season && SEASONS_DEFAULT.includes(i.season)) $("#season").value = i.season;
+    allQs().forEach(q => document.getElementById(`q${q.idx}-${q.answer === "Yes" ? "y" : "n"}`).checked = true)
+  }
+  function answers() {
+    return {
+      pname: $("#pname").value.trim(), state: $("#state").value, season: $("#season").value,
+      yes: allQs().filter(q => document.querySelector(`input[name=q${q.idx}]:checked`).value === "Yes")
+    }
+  }
+
+  function match(a) {
+    const hits = [];
+    M.db.forEach(r => {
+      if (norm(r.state) !== norm(a.state)) return;
+      if (r.season && !norm(r.season).includes(norm(a.season))) return;
+      const direct = a.yes.filter(q => r.flags[q.idx] === "yes").map(q => q.flag);
+      const poss = a.yes.filter(q => r.flags[q.idx] === "possible").map(q => q.flag);
+      if (!direct.length && !(includePossible && poss.length)) return;
+      hits.push({ r, direct, poss: includePossible ? poss : [] })
+    });
+    /* Merge rows that describe the same hazard in the same state (e.g. BF-01, BF-02, BF-03) into one result */
+    const groups = new Map();
+    hits.forEach(h => {
+      const k = norm(h.r.state) + "|" + norm(h.r.hazard).replace(/\s+/g, " ");
+      if (!groups.has(k)) groups.set(k, { rows: [], direct: new Set(), poss: new Set() });
+      const g = groups.get(k); g.rows.push(h.r); h.direct.forEach(x => g.direct.add(x)); h.poss.forEach(x => g.poss.add(x))
+    });
+    const rank = { extreme: 0, high: 1, medium: 2, low: 3 };
+    const uniq = arr => { const seen = new Set(); return arr.filter(x => { const k = norm(x).replace(/\s+/g, " "); if (!k || seen.has(k)) return false; seen.add(k); return true }) };
+    const out = [...groups.values()].map(g => {
+      const r0 = g.rows[0];
+      const level = g.rows.map(r => r.level).sort((x, y) => (rank[norm(x)] ?? 9) - (rank[norm(y)] ?? 9))[0];
+      const multi = g.rows.length > 1;
+      const vulnParts = []; const seenV = new Set();
+      g.rows.forEach(r => {
+        const k = norm(r.vuln).replace(/\s+/g, " "); if (!k || seenV.has(k)) return; seenV.add(k);
+        vulnParts.push(multi && r.exposure && r.exposure.length < 90 ? r.exposure + ":\n" + r.vuln : r.vuln)
+      });
+      const t = M.tarp.find(t => norm(t.state) === norm(r0.state) && hkey(t.hazard) === hkey(r0.hazard));
+      const direct = [...g.direct];
+      return {
+        r: {
+          ids: uniq(g.rows.map(r => r.id)), rows: g.rows.map(r => r.row), state: r0.state, hazard: r0.hazard, level,
+          season: uniq(g.rows.map(r => r.season)).join("; "),
+          exposures: uniq(g.rows.map(r => r.exposure).filter(e => e && e.length < 90)),
+          risk: uniq(g.rows.map(r => r.risk)).join("\n\n"), vuln: vulnParts.join("\n\n")
+        },
+        direct, poss: [...g.poss].filter(x => !g.direct.has(x)), t
+      }
+    });
+    out.sort((x, y) => (x.direct.length ? 0 : 1) - (y.direct.length ? 0 : 1) || (rank[norm(x.r.level)] ?? 9) - (rank[norm(y.r.level)] ?? 9));
+    return out
+  }
+
+  const lvClass = l => "lv-" + (["Extreme", "High", "Medium", "Low"].find(x => norm(x) === norm(l)) || "x");
+  const lv = l => `<span class="pill ${lvClass(l)}">${esc(l || "Not rated")}</span>`;
+  const lbl = c => c.replace("equipmet", "equipment");
+  function card(m) {
+    const r = m.r, t = m.t;
+    const shortExp = r.exposures.length ? `<div><b>Exposure</b>${r.exposures.map(e => `<span class="chip">${esc(e)}</span>`).join("")}</div>` : "";
+    const levels = [["n", "Normal"], ["t1", "T1"], ["t2", "T2"], ["t3", "T3"]];
+    const tarp = t ? `<div class="tarp">${levels.map(([c, n], i) => `<div class="lvl ${c}"><div class="lh">${n}</div>
+   <div class="th txt">${rich(t.th[i]) || '<span class="empty-note">No threshold entered</span>'}</div>
+   <div class="ac txt">${rich(t.act[i]) || '<span class="empty-note">' + (i === 0 ? "No action plan entered" : "No TARP entered") + '</span>'}</div></div>`).join("")}</div>
+   ${t.base ? `<details class="base"><summary>Base information and sources</summary><div class="txt">${rich(t.base)}</div></details>` : ""}`
+      : `<p class="empty-note">No trigger thresholds or TARP have been entered for ${esc(r.state)} – ${esc(r.hazard)} in the TARP &amp; ERP sheet yet.</p>`;
+    return `<article class="risk">
+ <div class="rh">${r.ids.map(id => `<span class="rid">${esc(id)}</span>`).join("")}<h3>${esc(r.hazard)}</h3>${lv(r.level)}</div>
+ <div class="meta"><div><b>State</b>${esc(r.state)}</div><div><b>Season</b>${esc(r.season)}</div>${shortExp}
+  <div><b>Triggered by</b>${m.direct.map(c => `<span class="chip">${esc(lbl(c))}</span>`).join("")}${m.poss.map(c => `<span class="chip poss" title="Marked as Possible in the Database">${esc(lbl(c))} (possible)</span>`).join("")}</div>
+  <div><b>Database row${r.rows.length > 1 ? "s" : ""}</b>${r.rows.join(", ")}</div></div>
+ <div class="two"><section><h4>Risks</h4><div class="txt">${rich(r.risk) || '<span class="empty-note">Not yet entered in Database</span>'}</div></section>
+ <section><h4>Vulnerability</h4><div class="txt">${rich(r.vuln) || '<span class="empty-note">Not yet entered in Database</span>'}</div></section></div>
+ <div class="tarp-wrap"><h4>Trigger levels and TARP</h4>${tarp}</div></article>`
+  }
+
+  function render() {
+    if (!M) { $("#out").innerHTML = `<div class="state-msg"><strong>No data loaded</strong>Drop Database.csv, TARP_ERP.csv and Project_Questionaire.csv (or one .xlsx workbook containing those sheets) into the box on the left, then click <b>Parse data</b>.</div>`; return }
+    const a = answers(); last = match(a);
+    const counts = {}; last.forEach(m => counts[m.r.level] = (counts[m.r.level] || 0) + 1);
+    const head = `<div class="summary"><h2>${last.length} risk${last.length === 1 ? "" : "s"} for ${esc(a.pname || "this project")}<span class="sub">${esc(a.state)} · ${esc(a.season)}</span></h2>
+  <div class="counts">${Object.entries(counts).map(([l, n]) => `<span class="pill ${lvClass(l)}">${n} ${esc(l)}</span>`).join("")}</div>
+  <label class="toggle" for="poss"><input type="checkbox" id="poss" ${includePossible ? "checked" : ""}>Include “Possible” matches</label>
+  <button type="button" id="copy" class="primary">Copy as table</button>
+  <span class="toast" id="toast" role="status"></span></div>`;
+    let body;
+    if (!a.yes.length) body = `<div class="state-msg"><strong>No site conditions or activities selected</strong>Answer Yes to at least one question to see the hazards that apply.</div>`;
+    else if (!last.length) body = `<div class="state-msg"><strong>No matching hazards</strong>The Database has no ${esc(a.state)} hazards in ${esc(a.season)} linked to the conditions and activities you selected${includePossible ? "" : ". Try including “Possible” matches"}.</div>`;
+    else body = `<div class="cards">${last.map(card).join("")}</div>`;
+    $("#out").innerHTML = head + body;
+    $("#poss").addEventListener("change", e => { includePossible = e.target.checked; try { localStorage.setItem("ctf-poss", includePossible ? "1" : "0") } catch (_) { } render() });
+    $("#copy").addEventListener("click", copyTable);
+  }
+  function cell(s) { return '"' + String(s || "").trim().replace(/"/g, '""') + '"' }
+  function copyTable() {
+    const L = ["Normal", "T1", "T2", "T3"];
+    const rows = [["State", "Season", "Hazard", "Risks", "Vulnerability", "Risk Level", "Trigger Levels", "TARP"]];
+    last.forEach(({ r, t }) => rows.push([r.state, r.season, r.hazard, r.risk, r.vuln, r.level,
+    t ? L.map((n, i) => t.th[i] ? n + ": " + t.th[i] : "").filter(Boolean).join("\n\n") : "",
+    t ? L.map((n, i) => t.act[i] ? n + " TARP:\n" + t.act[i] : "").filter(Boolean).join("\n\n") : ""]));
+    const tsv = rows.map(r => r.map(cell).join("\t")).join("\n");
+    const done = m => { $("#toast").textContent = m; setTimeout(() => { const el = $("#toast"); if (el) el.textContent = "" }, 3000) };
+    const fallback = () => {
+      const ta = document.createElement("textarea"); ta.value = tsv; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select();
+      let ok = false; try { ok = document.execCommand("copy") } catch (e) { } ta.remove(); done(ok ? "Copied. Paste into Excel." : "Copy was blocked by this browser.")
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(tsv).then(() => done("Copied. Paste into Excel."), fallback); else fallback()
+  }
+
+  /* Storage for in-memory sheet data */
+  const rawSheets = {
+    "Database": null,            // { csvText, filename, source }
+    "TARP & ERP": null,
+    "Project Questionaire": null
+  };
+
+  function detectSheetType(filename, text) {
+    const fn = norm(filename);
+    if (fn.includes("database") || fn.includes("db")) return "Database";
+    if (fn.includes("tarp") || fn.includes("erp")) return "TARP & ERP";
+    if (fn.includes("question") || fn.includes("project") || fn.includes("questionaire") || fn.includes("questionnaire")) return "Project Questionaire";
+
+    // Content heuristic check in case filename is generic like "export.csv" or "Sheet 1.csv"
+    const t = norm((text || "").slice(0, 1500));
+    if (t.includes("risk id") && (t.includes("climate hazard") || t.includes("question and response"))) return "Database";
+    if (t.includes("trigger threshold") || t.includes("action plan") || (t.includes("tarp") && t.includes("state"))) return "TARP & ERP";
+    if (t.includes("project name") || t.includes("site and project conditions") || t.includes("construction activities")) return "Project Questionaire";
+
+    return null;
+  }
+
+  function readBlobAsText(blob) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => {
+        let res = r.result;
+        if (typeof res === "string" && res.includes("\uFFFD")) {
+          const r2 = new FileReader();
+          r2.onload = () => resolve(r2.result);
+          r2.onerror = reject;
+          r2.readAsText(blob, "windows-1252");
+        } else {
+          resolve(res);
+        }
+      };
+      r.onerror = reject;
+      r.readAsText(blob, "utf-8");
+    });
+  }
+
+  function readBlobAsArrayBuffer(blob) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result);
+      r.onerror = reject;
+      r.readAsArrayBuffer(blob);
+    });
+  }
+
+  async function handleExcelBuffer(buffer, filename) {
+    const wb = XLSX.read(buffer, { type: "array" });
+    let count = 0;
+    for (const name of wb.SheetNames) {
+      const n = norm(name);
+      let target = null;
+      if (n === "database") target = "Database";
+      else if (n.includes("tarp") || n.includes("erp")) target = "TARP & ERP";
+      else if (n.includes("questionn") || n.includes("questionaire") || n.includes("project")) target = "Project Questionaire";
+
+      if (target) {
+        const ws = wb.Sheets[name];
+        const csv = XLSX.utils.sheet_to_csv(ws);
+        rawSheets[target] = { csvText: csv, filename: `${filename} [${name}]`, source: "excel" };
+        count++;
+      }
+    }
+    return count;
+  }
+
+  async function processFiles(files) {
+    if (!files || !files.length) return;
+    let updatedCount = 0;
+    const unrecognized = [];
+
+    for (const file of Array.from(files)) {
+      const name = file.name;
+      const ext = name.split(".").pop().toLowerCase();
+      try {
+        if (ext === "xlsx" || ext === "xls") {
+          const buf = await readBlobAsArrayBuffer(file);
+          const count = await handleExcelBuffer(buf, name);
+          if (count > 0) updatedCount += count;
+          else unrecognized.push(name);
+        } else {
+          const text = await readBlobAsText(file);
+          const target = detectSheetType(name, text);
+          if (target) {
+            rawSheets[target] = { csvText: text, filename: name, source: "csv" };
+            updatedCount++;
+          } else {
+            unrecognized.push(name);
+          }
+        }
+      } catch (err) {
+        console.error("Error reading file:", name, err);
+        unrecognized.push(`${name} (read error)`);
+      }
+    }
+
+    if (unrecognized.length) {
+      showWarn(`Could not identify sheet for: ${unrecognized.join(", ")}. Please ensure files correspond to Database, TARP & ERP, or Project Questionnaire.`);
+    } else {
+      $("#warn").hidden = true;
+    }
+
+    if (updatedCount) dirty = true;
+    updateStaging();
+  }
+
+  /* Reflects which files are staged and whether Parse can run. Does not parse anything. */
+  let dirty = false;
+  function updateStaging() {
+    updateStatusChips();
+    const missing = REQUIRED.filter(k => !rawSheets[k]);
+    const anyStaged = REQUIRED.some(k => rawSheets[k]);
+    $("#parsebtn").disabled = missing.length > 0;
+    $("#clearbtn").disabled = !anyStaged && !M;
+    if (!anyStaged) $("#srcmeta").textContent = "No files added yet.";
+    else if (missing.length) $("#srcmeta").innerHTML = `Still needed: <strong>${esc(missing.join(", "))}</strong>`;
+    else if (dirty) $("#srcmeta").innerHTML = `<strong>All three sheets added.</strong> Click <b>Parse data</b> to load them.`;
+  }
+
+  function updateStatusChips() {
+    const chips = $("#statuschips");
+    if (!chips) return;
+    const items = [
+      { key: "Database", label: "Database" },
+      { key: "TARP & ERP", label: "TARP & ERP" },
+      { key: "Project Questionaire", label: "Questionnaire" }
+    ];
+    chips.innerHTML = items.map(({ key, label }) => {
+      const d = rawSheets[key];
+      if (d) {
+        /* "staged" = file added but not parsed yet; "loaded" = parsed and in use */
+        return `<span class="sheet-chip ${d.parsed ? "loaded" : "staged"}" title="${esc(d.filename || key)}"><span class="dot"></span>${esc(label)} ${d.parsed ? "✓" : "(added)"}</span>`;
+      }
+      return `<span class="sheet-chip" title="Awaiting file"><span class="dot"></span>${esc(label)} (drop here)</span>`;
+    }).join("");
+  }
+
+  function showSource() {
+    updateStatusChips();
+    const sources = [];
+    for (const [k, d] of Object.entries(rawSheets)) {
+      if (d && d.filename) sources.push(d.filename);
+    }
+    const desc = sources.join(", ");
+    $("#srcmeta").innerHTML = `<strong>Data active:</strong> ${esc(desc)}<br><span style="color:var(--muted)">${M.db.length} Database rows · ${M.tarp.length} TARP rows · ${allQs().length} questions</span>`;
+
+    const w = $("#warn");
+    w.hidden = !M.problems.length;
+    w.className = "warn";
+    w.innerHTML = M.problems.length ? `Check the data:<ul>${M.problems.map(p => `<li>${esc(p)}</li>`).join("")}</ul>` : "";
+  }
+
+  function showWarn(msg) {
+    const w = $("#warn");
+    w.hidden = false;
+    w.className = "warn";
+    w.innerHTML = esc(msg);
+  }
+
+  function fail(msg) {
+    M = null;
+    updateStaging();
+    $("#srcmeta").innerHTML = `<strong style="color:var(--t3)">Could not parse the data</strong>`;
+    const w = $("#warn");
+    w.hidden = false;
+    w.className = "warn";
+    w.textContent = msg;
+    $("#qbody").hidden = true;
+    $("#out").innerHTML = `<div class="state-msg"><strong>No data loaded</strong>${esc(msg)}</div>`;
+  }
+
+  const REQUIRED = ["Database", "TARP & ERP", "Project Questionaire"];
+
+  /* Runs only when the Parse button is clicked */
+  function parseStagedSheets() {
+    if (typeof XLSX === "undefined") { fail("The CSV/Excel reader library did not load. Check your internet connection and reload the page."); return; }
+    const missing = REQUIRED.filter(k => !rawSheets[k]);
+    if (missing.length > 0) {
+      showWarn(`Still needed before parsing: ${missing.join(", ")}.`);
+      return;
+    }
+
+    try {
+      const wb = { SheetNames: [], Sheets: {} };
+      for (const [name, data] of Object.entries(rawSheets)) {
+        const clean = (data.csvText || "").replace(/^\uFEFF/, "");
+        const csvBook = XLSX.read(clean, { type: "string", raw: true });
+        wb.SheetNames.push(name);
+        wb.Sheets[name] = csvBook.Sheets[csvBook.SheetNames[0]];
+      }
+      M = parseWorkbook(wb);
+      REQUIRED.forEach(k => rawSheets[k].parsed = true);
+      dirty = false;
+      buildForm();
+      if (!restoreAnswers()) applySheetAnswers();
+      showSource();
+      updateStaging();
+      render();
+    } catch (err) {
+      fail(err.message || "Failed to parse data.");
+    }
+  }
+
+  function clearAll() {
+    REQUIRED.forEach(k => rawSheets[k] = null);
+    M = null; dirty = false; last = [];
+    $("#qbody").hidden = true;
+    $("#warn").hidden = true;
+    updateStaging();
+    render();
+  }
+
+  function saveAnswers() { try { const a = answers(); localStorage.setItem("ctf-ans3", JSON.stringify({ pname: a.pname, state: a.state, season: a.season, yes: a.yes.map(q => q.text) })) } catch (e) { } }
+  function restoreAnswers() {
+    try {
+      const s = JSON.parse(localStorage.getItem("ctf-ans3") || "null"); if (!s) return false;
+      $("#pname").value = s.pname || ""; if (M.states.includes(s.state)) $("#state").value = s.state; if (SEASONS_DEFAULT.includes(s.season)) $("#season").value = s.season;
+      allQs().forEach(q => document.getElementById(`q${q.idx}-${s.yes.includes(q.text) ? "y" : "n"}`).checked = true); return true
+    } catch (e) { return false }
+  }
+
+  $("#q").addEventListener("input", () => { render(); saveAnswers() });
+  $("#q").addEventListener("change", () => { render(); saveAnswers() });
+  $("#q").addEventListener("submit", e => e.preventDefault());
+  $("#allno").addEventListener("click", () => { allQs().forEach(q => document.getElementById(`q${q.idx}-n`).checked = true); render(); saveAnswers() });
+  $("#fromsheet").addEventListener("click", () => { applySheetAnswers(); render(); saveAnswers() });
+  $("#parsebtn").addEventListener("click", parseStagedSheets);
+  $("#clearbtn").addEventListener("click", clearAll);
+
+  /* Tab switcher */
+  $("#tab-file").addEventListener("click", () => {
+    $("#tab-file").classList.add("active");
+    $("#tab-file").setAttribute("aria-selected", "true");
+    $("#tab-gsheet").classList.remove("active");
+    $("#tab-gsheet").setAttribute("aria-selected", "false");
+    $("#pane-file").hidden = false;
+    $("#pane-gsheet").hidden = true;
+  });
+
+  $("#tab-gsheet").addEventListener("click", () => {
+    $("#tab-gsheet").classList.add("active");
+    $("#tab-gsheet").setAttribute("aria-selected", "true");
+    $("#tab-file").classList.remove("active");
+    $("#tab-file").setAttribute("aria-selected", "false");
+    $("#pane-gsheet").hidden = false;
+    $("#pane-file").hidden = true;
+    $("#gsheet-url").focus();
+  });
+
+  function extractGoogleSheetId(input) {
+    if (!input) return null;
+    input = input.trim();
+    const pubMatch = input.match(/\/spreadsheets\/d\/e\/([a-zA-Z0-9-_]+)/);
+    if (pubMatch) return { id: pubMatch[1], isPub: true };
+
+    const stdMatch = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    if (stdMatch) return { id: stdMatch[1], isPub: false };
+
+    if (/^[a-zA-Z0-9-_]{20,}$/.test(input)) {
+      return { id: input, isPub: false };
+    }
+    return null;
+  }
+
+  async function fetchFromGoogleSheet(urlOrId) {
+    const target = extractGoogleSheetId(urlOrId);
+    if (!target) {
+      showWarn("Please enter a valid Google Sheet URL or Spreadsheet ID.");
+      return;
+    }
+
+    const { id, isPub } = target;
+    const btn = $("#gsheet-fetch-btn");
+    btn.disabled = true;
+    btn.textContent = "Fetching from Google...";
+    $("#srcmeta").innerHTML = `<em>Connecting to Google Sheets…</em>`;
+
+    try {
+      let loadedCount = 0;
+
+      // Strategy 1: Direct XLSX export (downloads all sheets in one single file)
+      const exportUrl = isPub
+        ? `https://docs.google.com/spreadsheets/d/e/${id}/pub?output=xlsx`
+        : `https://docs.google.com/spreadsheets/d/${id}/export?format=xlsx`;
+
+      try {
+        const res = await fetch(exportUrl);
+        if (res.ok) {
+          const buf = await res.arrayBuffer();
+          loadedCount = await handleExcelBuffer(buf, "Google Sheet");
+        }
+      } catch (exportErr) {
+        console.warn("Direct XLSX export failed, trying CSV export fallback...", exportErr);
+      }
+
+      // Strategy 2: If XLSX export didn't succeed, fallback to GViz CSV for standard sheets
+      if (loadedCount === 0 && !isPub) {
+        const gvizSheets = [
+          { name: "Database", aliases: ["Database", "database"] },
+          { name: "TARP & ERP", aliases: ["TARP & ERP", "TARP_ERP", "TARP & ERP "] },
+          { name: "Project Questionaire", aliases: ["Project Questionaire", "Project Questionnaire"] }
+        ];
+
+        for (const targetSheet of gvizSheets) {
+          for (const alias of targetSheet.aliases) {
+            try {
+              const csvUrl = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(alias)}`;
+              const res = await fetch(csvUrl);
+              if (res.ok) {
+                const text = await res.text();
+                if (text && text.trim().length > 10 && !text.includes("<!DOCTYPE")) {
+                  rawSheets[targetSheet.name] = {
+                    csvText: text,
+                    filename: `Google Sheet [${alias}]`,
+                    source: "gsheet"
+                  };
+                  loadedCount++;
+                  break;
+                }
+              }
+            } catch (_) {}
+          }
+        }
+      }
+
+      if (loadedCount > 0) {
+        dirty = true;
+        try { localStorage.setItem("ctf-gsheet-url", urlOrId); } catch (_) {}
+        updateStaging();
+        $("#warn").hidden = true;
+        $("#srcmeta").innerHTML = `<strong>Fetched from Google Sheet.</strong> Click <b>Parse data</b> to load.`;
+      } else {
+        showWarn("Could not load sheets. Ensure the sheet is shared as 'Anyone with the link can view' and contains tabs: Database, TARP & ERP, and Project Questionaire.");
+        updateStaging();
+      }
+    } catch (err) {
+      console.error("Error fetching Google Sheet:", err);
+      showWarn("Failed to fetch Google Sheet: " + (err.message || "Network/CORS error. Make sure sharing is set to 'Anyone with the link can view'."));
+      updateStaging();
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Fetch Google Sheet";
+    }
+  }
+
+  $("#gsheet-fetch-btn").addEventListener("click", () => {
+    const url = $("#gsheet-url").value.trim();
+    fetchFromGoogleSheet(url);
+  });
+
+  $("#gsheet-url").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const url = $("#gsheet-url").value.trim();
+      fetchFromGoogleSheet(url);
+    }
+  });
+
+  /* Restore saved Google Sheet URL */
+  try {
+    const savedUrl = localStorage.getItem("ctf-gsheet-url");
+    if (savedUrl) $("#gsheet-url").value = savedUrl;
+  } catch (_) {}
+
+  /* File drop and selection handlers */
+  $("#fileinput").addEventListener("change", async (e) => {
+    if (e.target.files && e.target.files.length) {
+      await processFiles(e.target.files);
+      e.target.value = "";
+    }
+  });
+
+  $("#dropzone").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      $("#fileinput").click();
+    }
+  });
+
+  $("#dropzone").addEventListener("dragover", (e) => {
+    e.preventDefault();
+    $("#dropzone").classList.add("drag-active");
+  });
+  $("#dropzone").addEventListener("dragleave", () => {
+    $("#dropzone").classList.remove("drag-active");
+  });
+  /* Drops on the dropzone bubble up to the window handler below, so files are only read once */
+
+  let dragDepth = 0;
+  window.addEventListener("dragenter", (e) => {
+    if (e.dataTransfer && e.dataTransfer.types && Array.from(e.dataTransfer.types).includes("Files")) {
+      dragDepth++;
+      $("#dragoverlay").classList.add("active");
+    }
+  });
+  window.addEventListener("dragleave", (e) => {
+    dragDepth = Math.max(0, dragDepth - 1);
+    if (dragDepth === 0) {
+      $("#dragoverlay").classList.remove("active");
+    }
+  });
+  window.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+  });
+  window.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    dragDepth = 0;
+    $("#dragoverlay").classList.remove("active");
+    $("#dropzone").classList.remove("drag-active");
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+      await processFiles(e.dataTransfer.files);
+    }
+  });
+
+  /* Start empty: nothing is loaded until files are dropped and Parse is clicked */
+  updateStaging();
+  render();
+</script>
