@@ -1042,7 +1042,6 @@
         <div id="groups"></div>
         <div class="row-actions">
           <button type="button" id="allno">Set all to No</button>
-          <button type="button" id="fromsheet">Use answers from the workbook</button>
         </div>
       </div>
     </form>
@@ -1513,7 +1512,6 @@
   $("#q").addEventListener("change", () => { render(); saveAnswers() });
   $("#q").addEventListener("submit", e => e.preventDefault());
   $("#allno").addEventListener("click", () => { allQs().forEach(q => document.getElementById(`q${q.idx}-n`).checked = true); render(); saveAnswers() });
-  $("#fromsheet").addEventListener("click", () => { applySheetAnswers(); render(); saveAnswers() });
   $("#parsebtn").addEventListener("click", parseStagedSheets);
   $("#clearbtn").addEventListener("click", clearAll);
 
