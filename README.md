@@ -12,6 +12,8 @@ Step 2: Get the tool onto your computer
 - Click **Code** and Click **Download ZIP**
 - Find the downloaded ZIP file (usually in your Downloads folder) and extract it
 - You'll end up with a regular folder containing the tool's file.
+OR
+- Open this link - https://amrutharajendra.github.io/Beta--ClimateRiskTool/climate-risk-finder.html
 
 Step 3: Open the tool
 - Open the file called climate-risk-finder.html
